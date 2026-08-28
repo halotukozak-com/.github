@@ -19,14 +19,19 @@ group:
     files:
       - source: renovate.json
         dest: renovate.json
-  # ci.yml runs scala-cli commands directly, so it only applies to the
-  # scala-cli repos. alpaca builds with Mill and keeps its own workflow.
+  # ci.yml is synced only where the job structure already matches
+  # (Scalafmt/Test/Test (scala-js)/Test (scala-native) required checks):
+  # - regex excludes bench/**+scripts/** (JMH benchmarks added via a
+  #   separate --jmh run) and has its own benchmark job.
+  # - alpaca builds with Mill entirely.
+  # mrpc used to be excluded too (branch protection required a single
+  # "Build and test" check) but was aligned to the shared job names —
+  # see halotukozak-com/mrpc#51.
   - repos: |
       halotukozak-com/commons
       halotukozak-com/made
       halotukozak-com/mcodec
       halotukozak-com/mrpc
-      halotukozak-com/regex
     files:
       - source: shared/ci.yml
         dest: .github/workflows/ci.yml
