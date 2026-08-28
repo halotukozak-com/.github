@@ -1,0 +1,151 @@
+name: Run CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  # Gate the build/test jobs so doc-only changes (README, renovate.json,
+  # sync config, …) don't run the suite. The gated jobs keep their names as
+  # required status checks; skipped via a job-level `if` they report Success.
+  # `test-cross-platform` is split into one job per platform on purpose:
+  # skipping a *matrix* job leaves its required inner checks pending forever
+  # (actions/runner#952).
+  changes:
+    name: Detect code changes
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            code:
+              - '**/*.scala'
+              - 'project.scala'
+              - '.scalafmt.conf'
+              - '.github/workflows/ci.yml'
+
+  lint:
+    name: Scalafmt
+    needs: changes
+    if: ${{ needs.changes.outputs.code == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Setup coursier cache
+        uses: coursier/cache-action@v8.1
+      - uses: VirtusLab/scala-cli-setup@v1
+      - name: Check formatting
+        run: scala-cli --power fmt --check .
+
+  test:
+    name: Test
+    needs: changes
+    if: ${{ needs.changes.outputs.code == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Setup coursier cache
+        uses: coursier/cache-action@v8.1
+      - name: Cache scala-cli/Bloop incremental build
+        uses: actions/cache@v6
+        with:
+          path: .scala-build
+          key: scala-build-jvm-${{ hashFiles('project.scala', '**/*.scala') }}
+          restore-keys: |
+            scala-build-jvm-
+      - uses: VirtusLab/scala-cli-setup@v1
+      - name: Run tests
+        # Coverage is recorded only for production sources; tests were previously
+        # measured as 100%-covered and inflated the reported number.
+        run: scala-cli --power test . -O -coverage-out:./.scoverage -O '-coverage-exclude-files:.*test/.*'
+      - name: Generate coverage
+        run: scala-cli .scoverage/report.sc
+      - uses: codecov/codecov-action@v7
+        with:
+          fail_ci_if_error: false
+          files: .scoverage/report/cobertura.xml
+          token: ${{ secrets.CODECOV_TOKEN }}
+      - name: Test documentation
+        run: scala-cli --power doc .
+
+  compile:
+    name: Compile (${{ matrix.platform }})
+    needs: changes
+    if: ${{ needs.changes.outputs.code == 'true' }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: jvm
+            args: ""
+          - platform: scala-js
+            args: "--js-version 1.22.0"
+          - platform: scala-native
+            args: "--native-version 0.5.12"
+    steps:
+      - uses: actions/checkout@v7
+      - name: Setup coursier cache
+        uses: coursier/cache-action@v8.1
+      - name: Cache scala-cli/Bloop incremental build
+        uses: actions/cache@v6
+        with:
+          path: .scala-build
+          key: scala-build-${{ matrix.platform }}-${{ hashFiles('project.scala', '**/*.scala') }}
+          restore-keys: |
+            scala-build-${{ matrix.platform }}-
+      - uses: VirtusLab/scala-cli-setup@v1
+      - name: Compile
+        run: scala-cli --power compile . --platform ${{ matrix.platform }} ${{ matrix.args }}
+
+  # JVM is covered by the `test` job above (with coverage/docs); these two just
+  # run the same suite on the other targets to catch platform-specific
+  # regressions. Kept as separate jobs (not a matrix) so they can be skipped
+  # individually without hanging their required checks.
+  test-scala-js:
+    name: Test (scala-js)
+    needs: changes
+    if: ${{ needs.changes.outputs.code == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Setup coursier cache
+        uses: coursier/cache-action@v8.1
+      - name: Cache scala-cli/Bloop incremental build
+        uses: actions/cache@v6
+        with:
+          path: .scala-build
+          key: scala-build-scala-js-${{ hashFiles('project.scala', '**/*.scala') }}
+          restore-keys: |
+            scala-build-scala-js-
+      - uses: VirtusLab/scala-cli-setup@v1
+      - name: Run tests
+        run: scala-cli --power test . --platform scala-js --js-version 1.22.0
+
+  test-scala-native:
+    name: Test (scala-native)
+    needs: changes
+    if: ${{ needs.changes.outputs.code == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Setup coursier cache
+        uses: coursier/cache-action@v8.1
+      - name: Cache scala-cli/Bloop incremental build
+        uses: actions/cache@v6
+        with:
+          path: .scala-build
+          key: scala-build-scala-native-${{ hashFiles('project.scala', '**/*.scala') }}
+          restore-keys: |
+            scala-build-scala-native-
+      - uses: VirtusLab/scala-cli-setup@v1
+      - name: Run tests
+        run: scala-cli --power test . --platform scala-native --native-version 0.5.12

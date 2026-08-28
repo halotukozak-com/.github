@@ -1,0 +1,32 @@
+group:
+  - repos: |
+      halotukozak-com/commons
+      halotukozak-com/made
+      halotukozak-com/mcodec
+      halotukozak-com/mrpc
+      halotukozak-com/regex
+      halotukozak-com/alpaca
+    files:
+      - source: .scalafmt.conf
+        dest: .scalafmt.conf
+  - repos: |
+      halotukozak-com/commons
+      halotukozak-com/made
+      halotukozak-com/mcodec
+      halotukozak-com/mrpc
+      halotukozak-com/regex
+      halotukozak-com/alpaca
+    files:
+      - source: renovate.json
+        dest: renovate.json
+  # ci.yml runs scala-cli commands directly, so it only applies to the
+  # scala-cli repos. alpaca builds with Mill and keeps its own workflow.
+  - repos: |
+      halotukozak-com/commons
+      halotukozak-com/made
+      halotukozak-com/mcodec
+      halotukozak-com/mrpc
+      halotukozak-com/regex
+    files:
+      - source: shared/ci.yml
+        dest: .github/workflows/ci.yml
