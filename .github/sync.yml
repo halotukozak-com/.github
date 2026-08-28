@@ -49,3 +49,17 @@ group:
     files:
       - source: shared/docs.yaml
         dest: .github/workflows/docs.yaml
+  # MiMa binary-compatibility check, report-only (labels needs-major, never
+  # fails the build). Same exclusions as ci.yml/docs.yaml: regex would need
+  # its own --exclude "bench/**" wired in, alpaca is Mill (done separately,
+  # not through this sync — its publish/classpath story is different).
+  - repos: |
+      halotukozak-com/commons
+      halotukozak-com/made
+      halotukozak-com/mcodec
+      halotukozak-com/mrpc
+    files:
+      - source: .mima/bin-compat-check.scala
+        dest: .mima/bin-compat-check.scala
+      - source: shared/mima.yml
+        dest: .github/workflows/mima.yml
