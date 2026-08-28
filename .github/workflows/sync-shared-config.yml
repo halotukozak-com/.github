@@ -8,6 +8,8 @@ on:
       - renovate.json
       - shared/ci.yml
       - shared/docs.yaml
+      - shared/mima.yml
+      - .mima/bin-compat-check.scala
       - .scoverage/report.sc
       - .github/sync.yml
   workflow_dispatch:
