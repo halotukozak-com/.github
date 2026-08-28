@@ -19,7 +19,18 @@ group:
     files:
       - source: renovate.json
         dest: renovate.json
-  # ci.yml is NOT synced: each repo's build/test steps are too specific to
-  # share verbatim (e.g. regex excludes bench/**+scripts/** and has its own
-  # JMH benchmark job; alpaca builds with Mill entirely). Every repo keeps
-  # its own .github/workflows/ci.yml.
+  # ci.yml is synced only where the job structure already matches
+  # (Scalafmt/Test/Test (scala-js)/Test (scala-native) required checks):
+  # - regex excludes bench/**+scripts/** (JMH benchmarks added via a
+  #   separate --jmh run) and has its own benchmark job.
+  # - mrpc's branch protection requires a single "Build and test" check,
+  #   not the split Scalafmt/Test ones — syncing would permanently stall
+  #   every PR there waiting on a check that no longer exists.
+  # - alpaca builds with Mill entirely.
+  - repos: |
+      halotukozak-com/commons
+      halotukozak-com/made
+      halotukozak-com/mcodec
+    files:
+      - source: shared/ci.yml
+        dest: .github/workflows/ci.yml
