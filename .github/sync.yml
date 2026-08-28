@@ -35,3 +35,17 @@ group:
     files:
       - source: shared/ci.yml
         dest: .github/workflows/ci.yml
+  # docs.yaml is fully generic — project name/social-link/source-link are
+  # derived from `github.event.repository.name` at runtime, so it's
+  # byte-identical across repos with no per-repo templating needed.
+  # regex is excluded: its `scala-cli --power doc .` needs the same
+  # --exclude "bench/**" as its ci.yml. alpaca generates docs via Mill
+  # (build.mill's scalaDocOptions), not this workflow.
+  - repos: |
+      halotukozak-com/commons
+      halotukozak-com/made
+      halotukozak-com/mcodec
+      halotukozak-com/mrpc
+    files:
+      - source: shared/docs.yaml
+        dest: .github/workflows/docs.yaml

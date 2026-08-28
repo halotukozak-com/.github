@@ -7,6 +7,7 @@ on:
       - .scalafmt.conf
       - renovate.json
       - shared/ci.yml
+      - shared/docs.yaml
       - .scoverage/report.sc
       - .github/sync.yml
   workflow_dispatch:
