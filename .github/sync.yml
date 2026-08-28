@@ -35,3 +35,15 @@ group:
     files:
       - source: shared/ci.yml
         dest: .github/workflows/ci.yml
+  # scoverage report-generation script used by the "Generate coverage" step
+  # in ci.yml above, plus regex (which keeps its own ci.yml but uses the
+  # same script). Not alpaca — it uses Mill's own ScoverageModule.
+  - repos: |
+      halotukozak-com/commons
+      halotukozak-com/made
+      halotukozak-com/mcodec
+      halotukozak-com/mrpc
+      halotukozak-com/regex
+    files:
+      - source: .scoverage/report.sc
+        dest: .scoverage/report.sc
