@@ -23,14 +23,15 @@ group:
   # (Scalafmt/Test/Test (scala-js)/Test (scala-native) required checks):
   # - regex excludes bench/**+scripts/** (JMH benchmarks added via a
   #   separate --jmh run) and has its own benchmark job.
-  # - mrpc's branch protection requires a single "Build and test" check,
-  #   not the split Scalafmt/Test ones — syncing would permanently stall
-  #   every PR there waiting on a check that no longer exists.
   # - alpaca builds with Mill entirely.
+  # mrpc used to be excluded too (branch protection required a single
+  # "Build and test" check) but was aligned to the shared job names —
+  # see halotukozak-com/mrpc#51.
   - repos: |
       halotukozak-com/commons
       halotukozak-com/made
       halotukozak-com/mcodec
+      halotukozak-com/mrpc
     files:
       - source: shared/ci.yml
         dest: .github/workflows/ci.yml
