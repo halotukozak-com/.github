@@ -1,0 +1,20 @@
+name: Sync shared config
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .scalafmt.conf
+      - renovate.json
+      - shared/ci.yml
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: BetaHuhn/repo-file-sync-action@v1
+        with:
+          GH_PAT: ${{ secrets.GH_PAT }}
+          CONFIG_PATH: .github/sync.yml
