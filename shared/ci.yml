@@ -7,33 +7,8 @@ on:
     branches: [ master ]
 
 jobs:
-  # Gate the build/test jobs so doc-only changes (README, renovate.json,
-  # sync config, …) don't run the suite. The gated jobs keep their names as
-  # required status checks; skipped via a job-level `if` they report Success.
-  # `test-cross-platform` is split into one job per platform on purpose:
-  # skipping a *matrix* job leaves its required inner checks pending forever
-  # (actions/runner#952).
-  changes:
-    name: Detect code changes
-    runs-on: ubuntu-latest
-    outputs:
-      code: ${{ steps.filter.outputs.code }}
-    steps:
-      - uses: actions/checkout@v7
-      - uses: dorny/paths-filter@v3
-        id: filter
-        with:
-          filters: |
-            code:
-              - '**/*.scala'
-              - 'project.scala'
-              - '.scalafmt.conf'
-              - '.github/workflows/ci.yml'
-
   lint:
     name: Scalafmt
-    needs: changes
-    if: ${{ needs.changes.outputs.code == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -45,8 +20,6 @@ jobs:
 
   test:
     name: Test
-    needs: changes
-    if: ${{ needs.changes.outputs.code == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -78,8 +51,6 @@ jobs:
 
   compile:
     name: Compile (${{ matrix.platform }})
-    needs: changes
-    if: ${{ needs.changes.outputs.code == 'true' }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -106,15 +77,19 @@ jobs:
       - name: Compile
         run: scala-cli --power compile . --platform ${{ matrix.platform }} ${{ matrix.args }}
 
-  # JVM is covered by the `test` job above (with coverage/docs); these two just
-  # run the same suite on the other targets to catch platform-specific
-  # regressions. Kept as separate jobs (not a matrix) so they can be skipped
-  # individually without hanging their required checks.
-  test-scala-js:
-    name: Test (scala-js)
-    needs: changes
-    if: ${{ needs.changes.outputs.code == 'true' }}
+  # JVM is covered by the `test` job above (with coverage/docs); this just runs
+  # the same suite on the other targets to catch platform-specific regressions.
+  test-cross-platform:
+    name: Test (${{ matrix.platform }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: scala-js
+            args: "--js-version 1.22.0"
+          - platform: scala-native
+            args: "--native-version 0.5.12"
     steps:
       - uses: actions/checkout@v7
       - name: Setup coursier cache
@@ -123,29 +98,9 @@ jobs:
         uses: actions/cache@v6
         with:
           path: .scala-build
-          key: scala-build-scala-js-${{ hashFiles('project.scala', '**/*.scala') }}
+          key: scala-build-${{ matrix.platform }}-${{ hashFiles('project.scala', '**/*.scala') }}
           restore-keys: |
-            scala-build-scala-js-
+            scala-build-${{ matrix.platform }}-
       - uses: VirtusLab/scala-cli-setup@v1
       - name: Run tests
-        run: scala-cli --power test . --platform scala-js --js-version 1.22.0
-
-  test-scala-native:
-    name: Test (scala-native)
-    needs: changes
-    if: ${{ needs.changes.outputs.code == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - name: Setup coursier cache
-        uses: coursier/cache-action@v8.1
-      - name: Cache scala-cli/Bloop incremental build
-        uses: actions/cache@v6
-        with:
-          path: .scala-build
-          key: scala-build-scala-native-${{ hashFiles('project.scala', '**/*.scala') }}
-          restore-keys: |
-            scala-build-scala-native-
-      - uses: VirtusLab/scala-cli-setup@v1
-      - name: Run tests
-        run: scala-cli --power test . --platform scala-native --native-version 0.5.12
+        run: scala-cli --power test . --platform ${{ matrix.platform }} ${{ matrix.args }}
