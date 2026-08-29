@@ -19,14 +19,12 @@ group:
     files:
       - source: renovate.json
         dest: renovate.json
-  # ci.yml is synced only where the job structure already matches
-  # (Scalafmt/Test/Test (scala-js)/Test (scala-native) required checks):
-  # - regex excludes bench/**+scripts/** (JMH benchmarks added via a
-  #   separate --jmh run) and has its own benchmark job.
-  # - alpaca builds with Mill entirely.
+  # ci.yml — the scala-cli repos. Job structure matches their branch
+  # protection (Scalafmt/Test/Test (scala-js)/Test (scala-native)).
   # mrpc used to be excluded too (branch protection required a single
   # "Build and test" check) but was aligned to the shared job names —
   # see halotukozak-com/mrpc#51.
+  # regex + alpaca build with Mill and get shared/ci-mill.yml instead (below).
   - repos: |
       halotukozak-com/commons
       halotukozak-com/made
@@ -35,12 +33,22 @@ group:
     files:
       - source: shared/ci.yml
         dest: .github/workflows/ci.yml
+  # ci-mill.yml — the Mill repos (regex, alpaca). Platform-agnostic
+  # `./mill __.*` selectors so the one file works with or without a
+  # Scala.js module. Single `test` job, matching both repos' branch
+  # protection. Lands as tests.yml; each repo keeps its own unsynced
+  # docs/publish/mima/benchmark workflows.
+  - repos: |
+      halotukozak-com/regex
+      halotukozak-com/alpaca
+    files:
+      - source: shared/ci-mill.yml
+        dest: .github/workflows/tests.yml
   # docs.yaml is fully generic — project name/social-link/source-link are
   # derived from `github.event.repository.name` at runtime, so it's
   # byte-identical across repos with no per-repo templating needed.
-  # regex is excluded: its `scala-cli --power doc .` needs the same
-  # --exclude "bench/**" as its ci.yml. alpaca generates docs via Mill
-  # (build.mill's scalaDocOptions), not this workflow.
+  # regex + alpaca are excluded: they generate docs via Mill
+  # (build.mill's scalaDocOptions) from their own docs workflow.
   - repos: |
       halotukozak-com/commons
       halotukozak-com/made
@@ -50,9 +58,9 @@ group:
       - source: shared/docs.yaml
         dest: .github/workflows/docs.yaml
   # MiMa binary-compatibility check, report-only (labels needs-major, never
-  # fails the build). Same exclusions as ci.yml/docs.yaml: regex would need
-  # its own --exclude "bench/**" wired in, alpaca is Mill (done separately,
-  # not through this sync — its publish/classpath story is different).
+  # fails the build). scala-cli repos only — regex + alpaca each carry a
+  # Mill-adapted mima.yml (different new-JAR / classpath resolution), kept
+  # in step by hand rather than through this sync.
   - repos: |
       halotukozak-com/commons
       halotukozak-com/made
