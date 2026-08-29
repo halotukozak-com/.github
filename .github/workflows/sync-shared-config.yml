@@ -7,6 +7,7 @@ on:
       - .scalafmt.conf
       - renovate.json
       - shared/ci.yml
+      - shared/ci-mill.yml
       - shared/docs.yaml
       - shared/mima.yml
       - .mima/bin-compat-check.scala
