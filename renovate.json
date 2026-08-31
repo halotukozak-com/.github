@@ -22,6 +22,7 @@
       "managerFilePatterns": [
         "/(^|/)project\\.scala$/",
         "/(^|/)README\\.md$/",
+        "/(^|/)docs/_docs/index\\.md$/",
         "/(^|/)build\\.sc$/",
         "/(^|/)build\\.mill$/",
         "/\\.mill$/"
@@ -40,6 +41,7 @@
       "managerFilePatterns": [
         "/(^|/)project\\.scala$/",
         "/(^|/)README\\.md$/",
+        "/(^|/)docs/_docs/index\\.md$/",
         "/(^|/)build\\.sc$/",
         "/(^|/)build\\.mill$/",
         "/\\.mill$/"
@@ -58,6 +60,7 @@
       "managerFilePatterns": [
         "/(^|/)project\\.scala$/",
         "/(^|/)README\\.md$/",
+        "/(^|/)docs/_docs/index\\.md$/",
         "/(^|/)build\\.sc$/",
         "/(^|/)build\\.mill$/",
         "/\\.mill$/"
@@ -107,6 +110,7 @@
       "description": "Mill version (//| mill-version pragma)",
       "managerFilePatterns": [
         "/(^|/)README\\.md$/",
+        "/(^|/)docs/_docs/index\\.md$/",
         "/(^|/)build\\.sc$/",
         "/(^|/)build\\.mill$/",
         "/\\.mill$/"
