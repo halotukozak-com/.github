@@ -6,6 +6,7 @@ on:
     paths:
       - .scalafmt.conf
       - renovate.json
+      - release.yml
       - shared/ci.yml
       - shared/ci-mill.yml
       - shared/docs.yaml
