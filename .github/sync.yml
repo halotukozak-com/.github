@@ -33,17 +33,29 @@ group:
     files:
       - source: shared/ci.yml
         dest: .github/workflows/ci.yml
-  # ci-mill.yml — the Mill repos (regex, alpaca). Platform-agnostic
-  # `./mill __.*` selectors so the one file works with or without a
-  # Scala.js module. Single `test` job, matching both repos' branch
-  # protection. Lands as tests.yml; each repo keeps its own unsynced
-  # docs/publish/mima/benchmark workflows.
+  # The Mill repos (regex, alpaca):
+  # - ci-mill.yml: platform-agnostic `./mill __.*` selectors, so the one
+  #   file works with or without a Scala.js module. Single `test` job,
+  #   matching both repos' branch protection. Lands as tests.yml.
+  # - bin-compat-check.scala + mima-mill.yml: same report-only MiMa setup as
+  #   the scala-cli repos below, adapted for Mill's JAR/classpath resolution
+  #   (`./mill show jvm.jar` / `jvm.compileClasspath` instead of
+  #   `scala-cli package --library`); the check script itself is identical.
+  # - publish-mill.yml: fully generic, no per-repo templating needed at all.
+  # Each repo keeps its own unsynced docs workflow (Mill's build.mill drives
+  # that) and regex additionally its own benchmark.yml.
   - repos: |
       halotukozak-com/regex
       halotukozak-com/alpaca
     files:
       - source: shared/ci-mill.yml
         dest: .github/workflows/tests.yml
+      - source: .mima/bin-compat-check.scala
+        dest: .mima/bin-compat-check.scala
+      - source: shared/mima-mill.yml
+        dest: .github/workflows/mima.yml
+      - source: shared/publish-mill.yml
+        dest: .github/workflows/publish.yml
   # docs.yaml is fully generic — project name/social-link/source-link are
   # derived from `github.event.repository.name` at runtime, so it's
   # byte-identical across repos with no per-repo templating needed.
@@ -58,9 +70,8 @@ group:
       - source: shared/docs.yaml
         dest: .github/workflows/docs.yaml
   # MiMa binary-compatibility check, report-only (labels needs-major, never
-  # fails the build). scala-cli repos only — regex + alpaca each carry a
-  # Mill-adapted mima.yml (different new-JAR / classpath resolution), kept
-  # in step by hand rather than through this sync.
+  # fails the build). scala-cli repos — regex + alpaca get the Mill-adapted
+  # version of both files through the group above instead.
   - repos: |
       halotukozak-com/commons
       halotukozak-com/made

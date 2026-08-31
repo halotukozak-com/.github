@@ -1,0 +1,39 @@
+name: Publish
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-java@v6
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+      # Mill's SonatypeCentralPublishModule reads MILL_PGP_SECRET_BASE64 (base64);
+      # PGP_PRIVATE_KEY (shared org secret) is stored armored, so derive the
+      # base64 form at runtime rather than keeping a second copy of the key.
+      - name: Derive MILL_PGP_SECRET_BASE64 from PGP_PRIVATE_KEY
+        env:
+          PGP_PRIVATE_KEY: ${{ secrets.PGP_PRIVATE_KEY }}
+        run: |
+          encoded="$(printf '%s' "$PGP_PRIVATE_KEY" | base64 -w0)"
+          echo "::add-mask::$encoded"
+          echo "MILL_PGP_SECRET_BASE64=$encoded" >> "$GITHUB_ENV"
+      # Publishes every SonatypeCentralPublishModule cross-target the build
+      # defines (e.g. regex_3 + regex_sjs1_3 + regex_native0.5_3) in one shot.
+      - run: ./mill mill.javalib.SonatypeCentralPublishModule/
+        env:
+          MILL_PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
+          MILL_SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+          MILL_SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}

@@ -10,6 +10,8 @@ on:
       - shared/ci-mill.yml
       - shared/docs.yaml
       - shared/mima.yml
+      - shared/mima-mill.yml
+      - shared/publish-mill.yml
       - .mima/bin-compat-check.scala
       - .scoverage/report.sc
       - .github/sync.yml
