@@ -54,7 +54,7 @@
     },
     {
       "customType": "regex",
-      "description": "Scala language version: scala-cli `using scala`, Mill `def scalaVersion`",
+      "description": "Scala language version: scala-cli `using scala`, Mill `def scalaVersion`, sbt `scalaVersion :=`",
       "managerFilePatterns": [
         "/(^|/)project\\.scala$/",
         "/(^|/)README\\.md$/",
@@ -64,7 +64,8 @@
       ],
       "matchStrings": [
         "//> using scala \"?(?<currentValue>[\\w.-]+)\"?",
-        "def scalaVersion\\s*=\\s*\"(?<currentValue>[\\w.-]+)\""
+        "def scalaVersion\\s*=\\s*\"(?<currentValue>[\\w.-]+)\"",
+        "scalaVersion\\s*:=\\s*\"(?<currentValue>[\\w.-]+)\""
       ],
       "depNameTemplate": "scala3",
       "packageNameTemplate": "scala/scala3",
