@@ -19,6 +19,21 @@ group:
     files:
       - source: renovate.json
         dest: renovate.json
+  # release.yml (GitHub's auto-generated release notes config): drops the
+  # sync bot's own "🔄 synced file(s)" PRs from the "What's Changed" list —
+  # they carry a `sync` label already, added by BetaHuhn to every PR it
+  # opens (this file just teaches GitHub's own release-notes generator to
+  # act on that label).
+  - repos: |
+      halotukozak-com/commons
+      halotukozak-com/made
+      halotukozak-com/mcodec
+      halotukozak-com/mrpc
+      halotukozak-com/regex
+      halotukozak-com/alpaca
+    files:
+      - source: release.yml
+        dest: .github/release.yml
   # ci.yml — the scala-cli repos. Job structure matches their branch
   # protection (Scalafmt/Test/Test (scala-js)/Test (scala-native)).
   # mrpc used to be excluded too (branch protection required a single
