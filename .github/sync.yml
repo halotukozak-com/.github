@@ -39,9 +39,7 @@ group:
   # mrpc used to be excluded too (branch protection required a single
   # "Build and test" check) but was aligned to the shared job names —
   # see halotukozak-com/mrpc#51.
-  # regex is scala-cli too but keeps its own bespoke, unsynced ci.yml (extra
-  # excludes + a benchmark job); alpaca builds with Mill and gets
-  # shared/ci-mill.yml instead (below).
+  # regex + alpaca build with Mill and get shared/ci-mill.yml instead (below).
   - repos: |
       halotukozak-com/commons
       halotukozak-com/made
@@ -50,8 +48,7 @@ group:
     files:
       - source: shared/ci.yml
         dest: .github/workflows/ci.yml
-  # The Mill repos (alpaca only - regex migrated to scala-cli and now lives
-  # in the ci.yml/mima groups below with its own bespoke, unsynced workflows):
+  # The Mill repos (regex, alpaca):
   # - ci-mill.yml: the `discover` job asks Mill which top-level modules have
   #   a `.test` submodule, so the `test` matrix works whether or not a repo
   #   has a Scala.js module, with no per-repo templating. Lands as tests.yml.
@@ -60,9 +57,10 @@ group:
   #   (`./mill show jvm.jar` / `jvm.compileClasspath` instead of
   #   `scala-cli package --library`); the check script itself is identical.
   # - publish-mill.yml: fully generic, no per-repo templating needed at all.
-  # alpaca keeps its own unsynced docs workflow (Mill's build.mill drives
-  # that).
+  # Each repo keeps its own unsynced docs workflow (Mill's build.mill drives
+  # that) and regex additionally its own benchmark.yml.
   - repos: |
+      halotukozak-com/regex
       halotukozak-com/alpaca
     files:
       - source: shared/ci-mill.yml
