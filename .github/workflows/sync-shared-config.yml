@@ -61,7 +61,7 @@ jobs:
           set -euo pipefail
           echo '${{ steps.sync.outputs.pull_request_urls }}' | jq -r '.[]' | while read -r pr; do
             [ -n "$pr" ] || continue
-            gh pr merge --auto --squash "$pr" \
+            gh pr merge --auto --merge "$pr" \
               && echo "auto-merge enabled: $pr" \
               || echo "could not enable auto-merge: $pr"
           done
