@@ -18,12 +18,50 @@ on:
       - .github/sync.yml
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+
+      # BetaHuhn opens one PR per target repo (labelled `sync`). We want those
+      # to merge themselves once the target repo's CI is green, without a manual
+      # click each time. GitHub's native auto-merge does exactly that, but only
+      # if the repo has "Allow auto-merge" turned on — so flip it on for every
+      # repo in sync.yml first (idempotent; needs a PAT with admin on the repo).
+      - name: Enable "Allow auto-merge" on target repos
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          set -euo pipefail
+          grep -oE 'halotukozak-com/[a-z.]+' .github/sync.yml | sort -u | while read -r repo; do
+            gh api -X PATCH "repos/$repo" -F allow_auto_merge=true >/dev/null \
+              && echo "auto-merge allowed: $repo" \
+              || echo "could not set allow_auto_merge on $repo (PAT missing admin?)"
+          done
+
       - uses: BetaHuhn/repo-file-sync-action@v1
+        id: sync
         with:
           GH_PAT: ${{ secrets.GH_PAT }}
           CONFIG_PATH: .github/sync.yml
+
+      # Turn on auto-merge for each PR the sync just opened. With required status
+      # checks on the target repo's `main`, GitHub holds the merge until CI
+      # passes; a failing check leaves the PR open and visible. Without required
+      # checks, it merges as soon as the PR is mergeable.
+      - name: Auto-merge sync PRs on green
+        if: steps.sync.outputs.pull_request_urls != ''
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          set -euo pipefail
+          echo '${{ steps.sync.outputs.pull_request_urls }}' | jq -r '.[]' | while read -r pr; do
+            [ -n "$pr" ] || continue
+            gh pr merge --auto --squash "$pr" \
+              && echo "auto-merge enabled: $pr" \
+              || echo "could not enable auto-merge: $pr"
+          done
