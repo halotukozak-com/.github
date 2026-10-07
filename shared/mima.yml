@@ -10,17 +10,8 @@ permissions:
   contents: read
   pull-requests: write
 
-# Report-only: an incompatibility never fails the build. Instead, on a PR,
-# it manages one of two labels and removes it again once a later push to the
-# same PR is compatible:
-# - `needs-major`: binary (MiMa backward) incompatibility. Wins when both
-#   checks fail.
-# - `needs-minor`: TASTy-only incompatibility (MiMa clean, TASTy-MiMa not).
-#   Other libraries' `inline` code using this API may fail to re-typecheck
-#   when inlined against the new version, so at least a minor bump.
-# The job fails only when a check can't run at all (dependency resolution,
-# a script compile error, an uncaught exception, ...); labels and the PR
-# comment are left alone then.
+# Report-only: on a PR, labels `needs-major` (binary break) or `needs-minor`
+# (TASTy-only break), removed once compatible. Fails only if a check can't run.
 #
 # Two checks run against the same baseline:
 # - MiMa (.mima/bin-compat-check.scala): do classfiles compiled against the
@@ -28,8 +19,7 @@ permissions:
 # - TASTy-MiMa (.mima/tasty-compat-check.scala): does TASTy compiled against
 #   the baseline still re-typecheck against the new JAR? That is what breaks
 #   when a user's code inlines an `inline def` / macro of ours, which MiMa
-#   can't see. A repo can exclude packages from this check (not from MiMa)
-#   with an optional `.mima/tasty-private-packages` file; see the script.
+#   can't see. Skips packages listed in `.mima/tasty-private-packages`.
 #
 # On a PR, the baseline is the current `main` tip (the merge commit's first
 # parent), not the last release — otherwise a break introduced by PR n stays
@@ -108,11 +98,8 @@ jobs:
           tasty_status=${PIPESTATUS[0]}
           set -e
 
-          # 0 = compatible, 2 = incompatible, anything else = the check itself
-          # couldn't run (dependency resolution, a script compile error, an
-          # uncaught exception, ...). A tool error fails the job and leaves the
-          # labels and the PR comment alone: the later steps don't run after a
-          # failed step, and a broken check must not "resolve" anything.
+          # 0 = compatible, 2 = incompatible, else the check couldn't run: fail
+          # here so the label/comment steps are skipped.
           tool_errors=0
           for check in "MiMa (bin-compat-check.scala):$bin_status" "TASTy-MiMa (tasty-compat-check.scala):$tasty_status"; do
             status=${check##*:}
@@ -135,8 +122,7 @@ jobs:
 
           mark() { if [ "$1" = ok ]; then echo '✅ compatible'; else echo '❌ incompatible'; fi; }
 
-          # One report for both checks: what the job summary and the sticky PR
-          # comment show.
+          # One report for both the job summary and the sticky PR comment.
           {
             echo "| Check vs \`$baseline_label\` | Result |"
             echo '| --- | --- |'

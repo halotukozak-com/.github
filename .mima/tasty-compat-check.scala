@@ -22,25 +22,10 @@
 //   newClasspath  pathSeparator-joined dependency classpath of the new JAR
 // Either classpath may include its JAR or not; the JDK's java.base is added.
 //
-// Optional per-repo file `.mima/tasty-private-packages` (read from the working
-// directory, i.e. the repo root in CI; not synced from halotukozak-com/.github):
-// one package name per line, `#` comments and blank lines ignored. Each one is
-// handed to tasty-mima as an artifact-private package, so its definitions are
-// no longer checked for TASTy compatibility. MiMa still checks them.
-// Only list a package that no downstream TASTy can reference. Inline/macro
-// calls nested in another library's `inline def` stay unexpanded in that
-// library's TASTy and are expanded at the final call site, against whichever
-// version of this library is on that classpath, so a macro's *expansion*
-// never lands in someone else's TASTy. The unexpanded call still records what
-// it refers to, though: inferred result types, signatures, default/using
-// arguments, type aliases pointing into the package. A package that leaks
-// through any of those is part of the TASTy contract, and listing it would
-// hide real breaks.
+// Optional `.mima/tasty-private-packages` (one package per line, `#` comments): skipped by
+// tasty-mima. List only packages no downstream TASTy can reference (types, defaults, aliases).
 //
-// Exit code: 0 if TASTy-compatible, 2 if not. Anything else (1 from an
-// uncaught exception, a dependency-resolution or compile failure in
-// scala-cli, …) means the check itself couldn't run — callers must tell the
-// two apart instead of treating every non-zero exit as an incompatibility.
+// Exit code: 0 compatible, 2 incompatible, anything else = the check failed to run.
 
 import java.io.File
 import java.net.URI
