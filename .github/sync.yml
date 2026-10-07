@@ -91,8 +91,9 @@ group:
       - source: shared/docs.yaml
         dest: .github/workflows/docs.yaml
   # MiMa binary- and TASTy-compatibility checks, report-only (labels
-  # needs-major, never fails the build). scala-cli repos — regex, alpaca,
-  # mcodec get the Mill-adapted workflow through the group above instead.
+  # needs-major / needs-minor). scala-cli repos — regex, alpaca, mcodec get the
+  # Mill-adapted workflow through the group above instead.
+  # Sync the scripts file by file: syncing all of .mima/ would wipe tasty-private-packages.
   - repos: |
       halotukozak-com/commons
       halotukozak-com/made
