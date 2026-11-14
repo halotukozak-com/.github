@@ -13,6 +13,7 @@ on:
       - shared/mima.yml
       - shared/mima-mill.yml
       - shared/publish-mill.yml
+      - shared/publish.yml
       - .mima/bin-compat-check.scala
       - .mima/tasty-compat-check.scala
       - .scoverage/report.sc
