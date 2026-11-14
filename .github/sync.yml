@@ -105,3 +105,14 @@ group:
         dest: .mima/tasty-compat-check.scala
       - source: shared/mima.yml
         dest: .github/workflows/mima.yml
+  # publish.yml — the scala-cli repos. Fully generic: the artifact name is
+  # derived from `github.event.repository.name` at runtime (it equals
+  # `publish.name` in each project.scala), so it is byte-identical across repos.
+  # The Mill repos get shared/publish-mill.yml instead (above).
+  - repos: |
+      halotukozak-com/commons
+      halotukozak-com/made
+      halotukozak-com/mrpc
+    files:
+      - source: shared/publish.yml
+        dest: .github/workflows/publish.yml
